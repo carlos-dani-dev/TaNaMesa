@@ -1,0 +1,54 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: TaNaMesa_postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+      PGDATA: ${PG_DATA}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:${PG_DATA}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d TaNaMesa"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - TaNaMesa_network
+  
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: TaNaMesa_pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN4_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN4_PASSWORD}
+    ports:
+      - "5050:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - TaNaMesa_network
+  
+    api:
+      build: .
+      container_name: TaNaMesa_api
+      ports:
+        - "8000:8000"
+      environment:
+        DATABASE_URL: ${DATABASE_URL}
+      depends_on:
+        postgres:
+          condition: service_healthy
+      networks:
+        - TaNaMesa_network
+
+volumes:
+  postgres_data:
+
+networks:
+  TaNaMesa_network:
+    driver: bridge
