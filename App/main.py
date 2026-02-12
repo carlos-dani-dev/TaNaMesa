@@ -16,6 +16,8 @@ def health_check():
     return {'status': 'Healthy'}
 
 
-Base.metadata.create_all(bind=engine)
-templates = Jinja2Templates(directory="App/templates")
-app.mount("/static", StaticFiles(directory="App/static"), name="static")
+@app.on_event("startup")
+def on_startup():
+    Base.metadata.create_all(bind=engine)
+    templates = Jinja2Templates(directory="App/templates")
+    app.mount("/static", StaticFiles(directory="App/static"), name="static")
