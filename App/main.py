@@ -1,7 +1,6 @@
 from .routers import auth
 from fastapi import FastAPI
-from .database import engine
-from .models import Base
+from .database import engine, Base
 
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
