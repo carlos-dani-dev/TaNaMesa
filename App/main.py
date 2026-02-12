@@ -14,5 +14,5 @@ def health_check():
     return {'status': 'Healthy'}
 
 
-templates = Jinja2Templates(directory="TodoApp/templates")
+templates = Jinja2Templates(directory="App/templates")
 app.mount("/static", StaticFiles(directory="App/static"), name="static")
