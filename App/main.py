@@ -1,5 +1,7 @@
 from .routers import auth
 from fastapi import FastAPI
+from .database import engine
+from .models import Base
 
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
@@ -14,5 +16,6 @@ def health_check():
     return {'status': 'Healthy'}
 
 
+Base.metadata.create_all(bind=engine)
 templates = Jinja2Templates(directory="App/templates")
 app.mount("/static", StaticFiles(directory="App/static"), name="static")
