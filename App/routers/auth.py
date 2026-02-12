@@ -10,6 +10,7 @@ from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from jose import JWTError, jwt
 from fastapi.templating import Jinja2Templates
 from ..config import SECRET_KEY, ALGORITHM
+from ..models import Users
 
 router = APIRouter(
     prefix='/auth',
@@ -51,25 +52,18 @@ def get_db():
 
 
 db_dependency = Annotated[Session, Depends(get_db)]
-form_data_dependency = Annotated[OAuth2PasswordRequestForm, Depends()]
 bearer_dependency = Annotated[str, Depends(oauth2_bearer)]
 
 templates = Jinja2Templates(directory="App/templates")
 
 
-## Pages ##
-
+### Pages ###
 
 @router.get("/login-page")
 def render_login_page(request: Request):
     return templates.TemplateResponse("login.html", {"request": request})
 
-"""
-@router.get("/register-page")
-def render_register_page(request: Request):
-    return templates.TemplateResponse("register.html", {"request": request})
-
-## Endpoints ##
+### Endpoints ###
 
 async def authenticate_user(username: str, password: str, db):
     user = db.query(Users).filter(Users.username == username).first()
@@ -122,11 +116,10 @@ async def create_user(db: db_dependency,
 
 
 @router.post("/token", response_model=Token, status_code=status.HTTP_201_CREATED)
-async def login_for_access_token(form_data: form_data_dependency, db: db_dependency):
+async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], db: db_dependency):
     user = await authenticate_user(form_data.username, form_data.password, db)
     if not user: raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Could not validate user.')
 
     token = await create_access_token(user.username, user.id, user.role, timedelta(minutes=20))
 
     return {'access_token': token, 'token_type': 'bearer'}
-"""
