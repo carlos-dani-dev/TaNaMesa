@@ -8,6 +8,5 @@ jinja2
 python-multipart
 python-dotenv
 
-passlib
 bcrypt==4.0.1
 python-jose[cryptography]

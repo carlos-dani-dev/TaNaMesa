@@ -2,7 +2,7 @@ from datetime import timedelta, datetime, timezone
 from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
-from passlib.context import CryptContext
+import bcrypt
 from ..database import SessionLocal
 from sqlalchemy.orm import Session
 from starlette import status
@@ -21,8 +21,17 @@ router = APIRouter(
 if not SECRET_KEY:
     raise RuntimeError("SECRET_KEY não carregada do .env")
 
-bcrypt_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 oauth2_bearer = OAuth2PasswordBearer(tokenUrl='/auth/token')
+
+
+def hash_password(password: str) -> str:
+    """Hash a password using bcrypt"""
+    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """Verify a password against its hash"""
+    return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
 
 
 class CreateUserRequest(BaseModel):
@@ -68,7 +77,7 @@ def render_login_page(request: Request):
 async def authenticate_user(username: str, password: str, db):
     user = db.query(Users).filter(Users.username == username).first()
     if not user: return False
-    if not bcrypt_context.verify(password, user.hashed_password): return False
+    if not verify_password(password, user.hashed_password): return False
     return user
 
 
@@ -106,7 +115,7 @@ async def create_user(db: db_dependency,
         first_name=create_user_request.first_name,
         last_name=create_user_request.last_name,
         role=create_user_request.role,
-        hashed_password=bcrypt_context.hash(create_user_request.password),
+        hashed_password=hash_password(create_user_request.password),
         is_active=True,
         phone_number=create_user_request.phone_number
     )
