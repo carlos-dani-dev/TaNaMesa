@@ -12,3 +12,7 @@ app.include_router(auth.router)
 @app.get('/healthy')
 def health_check():
     return {'status': 'Healthy'}
+
+
+templates = Jinja2Templates(directory="TodoApp/templates")
+app.mount("/static", StaticFiles(directory="App/static"), name="static")
