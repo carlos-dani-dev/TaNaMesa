@@ -21,7 +21,7 @@ router = APIRouter(
 if not SECRET_KEY:
     raise RuntimeError("SECRET_KEY não carregada do .env")
 
-bcrypt_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
+bcrypt_context = CryptContext(schemes=['bcrypt_sha256'], deprecated='auto')
 oauth2_bearer = OAuth2PasswordBearer(tokenUrl='/auth/token')
 
 
