@@ -49,6 +49,7 @@ def get_db():
     try: yield db
     finally: db.close()
 
+
 db_dependency = Annotated[Session, Depends(get_db)]
 form_data_dependency = Annotated[OAuth2PasswordRequestForm, Depends()]
 bearer_dependency = Annotated[str, Depends(oauth2_bearer)]
