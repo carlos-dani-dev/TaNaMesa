@@ -1,4 +1,4 @@
-from .routers import auth
+from .routers import auth, admin
 from fastapi import FastAPI
 from .database import engine, Base
 from . import models
@@ -10,6 +10,8 @@ from fastapi.responses import RedirectResponse
 app = FastAPI()
 
 app.include_router(auth.router)
+app.include_router(admin.router)
+
 
 @app.get('/healthy')
 def health_check():

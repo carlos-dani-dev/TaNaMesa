@@ -70,7 +70,7 @@ templates = Jinja2Templates(directory="App/templates")
 
 @router.get("/login-page")
 def render_login_page(request: Request):
-    return templates.TemplateResponse("login.html", {"request": request})
+    return templates.TemplateResponse("login-page.html", {"request": request})
 
 ### Endpoints ###
 
@@ -98,8 +98,7 @@ async def get_current_user(token: bearer_dependency):
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Could not validate user.')
         return {'username': username, 'id': user_id, 'user_role': user_role}
     except JWTError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Could not validate user.')
-    
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Could not validate user.')  
 
 @router.get("/")
 async def get_user():
