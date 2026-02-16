@@ -1,4 +1,4 @@
-from .routers import auth, admin
+from .routers import admin, answer, auth, question, response, survey
 from fastapi import FastAPI
 from .database import engine, Base
 from . import models
@@ -11,6 +11,10 @@ app = FastAPI()
 
 app.include_router(auth.router)
 app.include_router(admin.router)
+app.include_router(answer.router)
+app.include_router(question.router)
+app.include_router(response.router)
+app.include_router(survey.router)
 
 
 @app.get('/healthy')

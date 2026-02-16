@@ -47,7 +47,7 @@ class Answer(Base):
     __tablename__ = "answer"
         
     answer_id = Column(Integer, primary_key=True, index=True)
-    answer = Column(String, nullable=False)
+    answer = Column(String, nullable=True)
     response_id = Column(Integer, ForeignKey("response.response_id"), nullable=True)
     question_id = Column(Integer, ForeignKey("question.question_id"), nullable=True)
 

@@ -1,0 +1,31 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <div class="card-header">
+            Pesquisa de Satisfação - Tá Na Mesa/PB
+        </div>
+        <div class="card-body">
+            <form id="cityForm">
+                <div class="form-group">
+                    <label>Selecione a cidade</label>
+                    <select name="city" class="form-control" required>
+                        <option>Campina Grande</option>
+                        <option>João Pessoa</option>
+                        <option>Patos</option>
+                        <option>Santa Rita</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">Enviar cidade</button>
+            </form>
+        </div>
+    </div>
+    <footer>
+    </footer>
+</div>
+{% endblock %}
+
+{% block script %}
+<script src="{{ url_for('static', path='/js/pages/city.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,74 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <div class="card-body">
+            <form id="editQuestionForm">
+                <div class="form-group">
+                    <label>Questão</label>
+                    <textarea name="question_text" class="form-control" rows=3>{{question.question_text}}</textarea>
+                </div>
+                <div class="form-group">
+                    <label>Order</label>
+                    <select name="order" class="form-control">
+                        <option {% if question.order == 1 %} selected="selected" {% endif %}>1</option>
+                        <option {% if question.order == 2 %} selected="selected" {% endif %}>2</option>
+                        <option {% if question.order == 3 %} selected="selected" {% endif %}>3</option>
+                        <option {% if question.order == 4 %} selected="selected" {% endif %}>4</option>
+                        <option {% if question.order == 5 %} selected="selected" {% endif %}>5</option>
+                    </select>
+                </div>
+                <div class="form-group form-check">
+                    <input type="checkbox" class="form-check-input" name="is_mandatory" {% if question.is_mandatory %} checked {% endif %}>
+                    <label class="form-check-label">Obrigatória</label>
+                </div>
+                <button type="submit" class="btn btn-primary">Editar questão</button>
+                <a href="/admin/question/{{ question.survey_id }}" class="btn btn-success">Back</a>
+            </form>
+        </div>
+    </div>
+    <div class="card-body">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Alternativa</th>
+                    <th scope="col">Order</th>
+                    <th scope="col">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for question_option in question_options %}
+                <tr class="pointer">
+                    <td>{{ loop.index }}</td>
+                    <td>{{ question_option.value }}</td>
+                    <td>{{ question_option.order }}</td>
+                    <td>
+                        <button class="btn btn-danger deleteQuestionOptionButton" data-question-option-id="{{ question_option.question_option_id }}" type="button" class="btn btn-danger">
+                            Deletar questão
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+                <form id="addQuestionOptionForm">
+                    <tr class="pointer">
+                        <td></td>
+                        <td><textarea name="value" class="form-control form-control-sm border-0 shadow-sm bg-light w-100"></textarea></td>
+                        <td>
+                            <select name="order" class="form-control form-control-sm border-0 shadow-sm bg-light w-100">
+                                <option {% if question.order == 1 %} selected="selected" {% endif %}>1</option>
+                                <option {% if question.order == 2 %} selected="selected" {% endif %}>2</option>
+                                <option {% if question.order == 3 %} selected="selected" {% endif %}>3</option>
+                                <option {% if question.order == 4 %} selected="selected" {% endif %}>4</option>
+                                <option {% if question.order == 5 %} selected="selected" {% endif %}>5</option>
+                            </select>
+                        </td>
+                        <td><button type="submit" class="btn btn-primary">Adicionar alternativa</button></td>
+                    </tr>
+                </form>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

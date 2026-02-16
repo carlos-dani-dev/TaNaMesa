@@ -39,7 +39,7 @@ def redirect_to_login():
 
 ### PAGES ###
 
-@router.get("/survey-page")
+@router.get("/survey")
 async def render_survey_page(request: Request, db: db_dependency):
     try:
         access_token = request.cookies.get('access_token')
@@ -54,5 +54,38 @@ async def render_survey_page(request: Request, db: db_dependency):
     except:
         return redirect_to_login()
 
+
+@router.get("/question/{survey_id}")
+async def render_question_page(request: Request, db: db_dependency, survey_id: int = Path(gt=0)):
+    try:
+        access_token = request.cookies.get('access_token')
+        user = await get_current_user(access_token)
+        
+        if user is None:
+            return redirect_to_login()
+        
+        questions = db.query(Question).filter(Question.survey_id == survey_id).order_by(Question.order).all()
+        
+        return templates.TemplateResponse("question-page.html", {"request": request, "questions": questions, "user": user})
+    except:
+        return redirect_to_login()
+
+
+@router.get("/edit-question/{question_id}")
+async def render_question_page(request: Request, db: db_dependency, question_id: int = Path(gt=0)):
+    try:
+        access_token = request.cookies.get('access_token')
+        user = await get_current_user(access_token)
+
+        if user is None:
+            return redirect_to_login()
+        
+        question = db.query(Question).filter(Question.question_id == question_id).first()
+        
+        question_options = db.query(QuestionOption).filter(QuestionOption.question_id == question_id).all()
+
+        return templates.TemplateResponse("edit-question-page.html", {"request": request, "question": question, "question_options": question_options, "user": user})
+    except:
+        return redirect_to_login()
 
 ### ENDPOINTS ###

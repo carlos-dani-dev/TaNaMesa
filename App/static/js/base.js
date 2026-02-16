@@ -1,34 +1,70 @@
-    // Add Todo JS
-    const todoForm = document.getElementById('todoForm');
-    if (todoForm) {
-        todoForm.addEventListener('submit', async function (event) {
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+};
+
+
+function logout() {
+    const cookies = document.cookie.split(";");
+
+    for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i];
+        const eqPos = cookie.indexOf("=");
+        const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+        document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+    }
+
+    window.location.href = '/auth/login-page';
+};
+
+
+document.querySelectorAll('.editQuestionButton').forEach(button => {
+
+    button.addEventListener('click', function (event) {
+
+        event.preventDefault();
+
+        const questionId = event.currentTarget.dataset.questionId;
+
+        const url = `/admin/edit-question/${questionId}`;
+
+        window.location.href = url;
+    });
+
+});
+
+const deleteQuestionButtons = document.querySelectorAll('.deleteQuestionButton')
+if (deleteQuestionButtons){
+    
+    deleteQuestionButtons.forEach(button => {
+
+        button.addEventListener('click', async function (event) {
+
             event.preventDefault();
 
-            const form = event.target;
-            const formData = new FormData(form);
-            const data = Object.fromEntries(formData.entries());
-
-            const payload = {
-                title: data.title,
-                description: data.description,
-                priority: parseInt(data.priority),
-                complete: false
-            };
+            const questionId = event.currentTarget.dataset.questionId;
 
             try {
-                const response = await fetch('/todos/todo', {
-                    method: 'POST',
+                const response = await fetch(`/question/delete/${questionId}`, {
+                    method: 'DELETE',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${getCookie('access_token')}`
-                    },
-                    body: JSON.stringify(payload)
+                    }
                 });
-
                 if (response.ok) {
-                    form.reset(); // Clear the form
+                    window.location.reload(true);
                 } else {
-                    // Handle error
                     const errorData = await response.json();
                     alert(`Error: ${errorData.detail}`);
                 }
@@ -37,48 +73,70 @@
                 alert('An error occurred. Please try again.');
             }
         });
-    }
+    });
+}
 
-    // Edit Todo JS
-    const editTodoForm = document.getElementById('editTodoForm');
-    if (editTodoForm) {
-        editTodoForm.addEventListener('submit', async function (event) {
+
+const deleteQuestionOptionButtons = document.querySelectorAll('.deleteQuestionOptionButton')
+if (deleteQuestionOptionButtons){
+    
+    deleteQuestionOptionButtons.forEach(button => {
+        button. addEventListener('click', async function (event) {
+
+            event.preventDefault();
+
+            const questionOptionId = event.currentTarget.dataset.questionOptionId;
+            console.log(questionOptionId)
+            
+            try {
+                const response = await fetch(`/question/question_option/delete/${questionOptionId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${getCookie('access_token')}`
+                    }
+                });
+                if (response.ok) {
+                    window.location.reload(true);
+                } else {
+                    const errorData = await response.json();
+                    alert(`Error: ${errorData.detail}`);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again.');
+            }
+        });
+    });
+}
+
+const loginForm = document.getElementById('loginForm');
+if (loginForm) {
+    loginForm.addEventListener('submit', async function (event) {
         event.preventDefault();
+
         const form = event.target;
         const formData = new FormData(form);
-        const data = Object.fromEntries(formData.entries());
-        var url = window.location.pathname;
-        const todoId = url.substring(url.lastIndexOf('/') + 1);
 
-        const payload = {
-            title: data.title,
-            description: data.description,
-            priority: parseInt(data.priority),
-            complete: data.complete === "on"
-        };
+        const payload = new URLSearchParams();
+        for (const [key, value] of formData.entries()) {
+            payload.append(key, value);
+        }
 
         try {
-            const token = getCookie('access_token');
-            console.log(token)
-            if (!token) {
-                throw new Error('Authentication token not found');
-            }
-
-            console.log(`${todoId}`)
-
-            const response = await fetch(`/todos/todo/${todoId}`, {
-                method: 'PUT',
+            const response = await fetch('/auth/token', {
+                method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
+                    'Content-Type': 'application/x-www-form-urlencoded'
                 },
-                body: JSON.stringify(payload)
+                body: payload.toString()
             });
 
             if (response.ok) {
-                window.location.href = '/todos/todo-page'; // Redirect to the todo page
+                const data = await response.json();
+                document.cookie = `access_token=${data.access_token}; path=/`;
+                window.location.href = '/admin/survey';
             } else {
-                // Handle error
                 const errorData = await response.json();
                 alert(`Error: ${errorData.detail}`);
             }
@@ -87,163 +145,295 @@
             alert('An error occurred. Please try again.');
         }
     });
+}
 
-        document.getElementById('deleteButton').addEventListener('click', async function () {
-            var url = window.location.pathname;
-            const todoId = url.substring(url.lastIndexOf('/') + 1);
 
-            try {
-                const token = getCookie('access_token');
-                if (!token) {
-                    throw new Error('Authentication token not found');
-                }
 
-                const response = await fetch(`/todos/todo/${todoId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
 
-                if (response.ok) {
-                    // Handle success
-                    window.location.href = '/todos/todo-page'; // Redirect to the todo page
-                } else {
-                    // Handle error
-                    const errorData = await response.json();
-                    alert(`Error: ${errorData.detail}`);
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('An error occurred. Please try again.');
-            }
-        });
+// Add Todo JS
+const editQuestionForm = document.getElementById('editQuestionForm');
+if (editQuestionForm) {
+    editQuestionForm.addEventListener('submit', async function (event) {
+        event.preventDefault();
 
+        const form = event.target;
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
         
-    }
+        var url = window.location.pathname;
+        const questionId = url.substring(url.lastIndexOf('/') + 1);
 
-    // Login JS
-    const loginForm = document.getElementById('loginForm');
-    if (loginForm) {
-        loginForm.addEventListener('submit', async function (event) {
-            event.preventDefault();
+        const payload = {
+            question_text: data.question_text,
+            order: parseInt(data.order),
+            is_mandatory: data.is_mandatory
+        };
 
-            const form = event.target;
-            const formData = new FormData(form);
-
-            const payload = new URLSearchParams();
-            for (const [key, value] of formData.entries()) {
-                payload.append(key, value);
-            }
-
-            try {
-                const response = await fetch('/auth/token', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    },
-                    body: payload.toString()
-                });
-
-                if (response.ok) {
-                    // Handle success (e.g., redirect to dashboard)
-                    const data = await response.json();
-                    // Save token to cookie
-                    document.cookie = `access_token=${data.access_token}; path=/`;
-                    window.location.href = '/admin/survey-page'; // Change this to your desired redirect page
-                } else {
-                    // Handle error
-                    const errorData = await response.json();
-                    alert(`Error: ${errorData.detail}`);
+        try {
+            const response = await fetch(`/question/update/${questionId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${getCookie('access_token')}`
+                },
+                body: JSON.stringify(payload)
+            });
+            if (response.ok) {
+                const result = await response.json();
+                if (!result || !result.survey_id) {
+                    alert('Survey ID not returned from server.');
+                    return;
                 }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('An error occurred. Please try again.');
+                window.location.href = `/admin/question/${result.survey_id}`;
+            } else {
+                const errorData = await response.json();
+                alert(`Error: ${errorData.detail}`);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An error occurred. Please try again.');
+        }
+    });
+}
+
+
+const addQuestionOptionForm = document.getElementById('addQuestionOptionForm');
+if (addQuestionOptionForm) {
+    addQuestionOptionForm.addEventListener('submit', async function (event) {
+        event.preventDefault();
+
+        const form = event.target;
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+        
+        var url = window.location.pathname;
+        const questionId = url.substring(url.lastIndexOf('/') + 1);
+
+        const payload = {
+            value: data.value,
+            order: parseInt(data.order)
+        };
+
+        try {
+            const response = await fetch(`/question/question_option/create/${questionId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${getCookie('access_token')}`
+                },
+                body: JSON.stringify(payload)
+            });
+            if (response.ok) {
+                window.location.reload(true);
+            } else {
+                const errorData = await response.json();
+                alert(`Error: ${errorData.detail}`);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An error occurred. Please try again.');
+        }
+    });
+}
+
+// Edit Todo JS
+const editTodoForm = document.getElementById('editTodoForm');
+if (editTodoForm) {
+    editTodoForm.addEventListener('submit', async function (event) {
+    event.preventDefault();
+    const form = event.target;
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+    var url = window.location.pathname;
+    const todoId = url.substring(url.lastIndexOf('/') + 1);
+
+    const payload = {
+        title: data.title,
+        description: data.description,
+        priority: parseInt(data.priority),
+        complete: data.complete === "on"
+    };
+
+    try {
+        const token = getCookie('access_token');
+        console.log(token)
+        if (!token) {
+            throw new Error('Authentication token not found');
+        }
+
+        console.log(`${todoId}`)
+
+        const response = await fetch(`/todos/todo/${todoId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (response.ok) {
+            window.location.href = '/todos/todo-page'; // Redirect to the todo page
+        } else {
+            // Handle error
+            const errorData = await response.json();
+            alert(`Error: ${errorData.detail}`);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('An error occurred. Please try again.');
+    }
+});
+
+document.getElementById('deleteButton').addEventListener('click', async function () {
+    var url = window.location.pathname;
+    const todoId = url.substring(url.lastIndexOf('/') + 1);
+
+    try {
+        const token = getCookie('access_token');
+        if (!token) {
+            throw new Error('Authentication token not found');
+        }
+
+        const response = await fetch(`/todos/todo/${todoId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`
             }
         });
+
+        if (response.ok) {
+            // Handle success
+            window.location.href = '/todos/todo-page'; // Redirect to the todo page
+        } else {
+            // Handle error
+            const errorData = await response.json();
+            alert(`Error: ${errorData.detail}`);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('An error occurred. Please try again.');
     }
+});   
+}
 
-    // Register JS
-    const registerForm = document.getElementById('registerForm');
-    if (registerForm) {
-        registerForm.addEventListener('submit', async function (event) {
-            event.preventDefault();
+const restaurantForm = document.getElementById("restaurantCodeForm");
+if (restaurantForm) {        
+    restaurantForm.addEventListener('submit', function (event) {
+        event.preventDefault();
 
-            const form = event.target;
-            const formData = new FormData(form);
-            const data = Object.fromEntries(formData.entries());
+        const form = event.target;
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
 
-            if (data.password !== data.password2) {
-                alert("Passwords do not match");
-                return;
-            }
+        const restaurantCode = data.restaurant-code;
+        
+        console.log(restaurantCode)
 
-            const payload = {
-                email: data.email,
-                username: data.username,
-                first_name: data.firstname,
-                last_name: data.lastname,
-                role: data.role,
-                phone_number: data.phone_number,
-                password: data.password
-            };
+        const pathParts = window.location.pathname.split('/');
+        const surveyId = pathParts[3];
+        
+        // iniciar a pesquisa ao clicar neste botão
+        
+        window.location.href =`/survey/fill/${surveyId}?restaurant_code=${encodeURIComponent(restaurantCode)}`;
+    });
+}
 
-            try {
-                const response = await fetch('/auth', {
+const surveyResponseForm = document.getElementById("surveyResponseForm");
+if (surveyResponseForm) {
+    surveyResponseForm.addEventListener('submit', async function (event) {
+
+        event.preventDefault();
+
+        const params = new URLSearchParams(window.location.search);
+        
+        const pathParts = window.location.pathname.split('/');
+        const surveyId = pathParts[3].split('?')[0];
+        const restaurantCode = params.get("restaurant_code");
+
+        if (!restaurantCode) {
+            alert('Restaurant code is missing. Please go back and enter it.');
+            return;
+        }
+
+        const response_payload = {
+            restaurant_code: restaurantCode,
+            begin_date: new Date().toISOString(),
+            end_date: new Date().toISOString()
+        }
+
+        let responseId;
+        try{
+            const response = await fetch(`/response/create/${surveyId}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(payload)
-                });
+                    body: JSON.stringify(response_payload)
+            });
+            if (response.ok) {
+                const data = await response.json();
+                responseId = parseInt(data.response_id);
+            } else{
+                const errorData = await response.json();
+                alert(`Error: ${errorData.detail}`);
+            }
+        } catch(error){
+            console.error('Error:', error);
+            alert('An error occurred. Please try again.');
+        };
 
+        const cards = document.querySelectorAll(".card");
+
+        for(const card of cards){
+            const questionId = parseInt(card.dataset.questionId);
+            const checked = card.querySelector("input[type=radio]:checked");
+
+            if (!checked) return;
+            const optDiv = checked.closest(".form-check");
+            const questionOptionId = parseInt(optDiv.dataset.questionOptionId);
+
+            let answerId;
+            const answer_payload = {}
+            try{
+                const response = await fetch(`/answer/create/${responseId}/${questionId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(answer_payload)
+                });
                 if (response.ok) {
-                    window.location.href = '/auth/login-page';
-                } else {
-                    // Handle error
+                    const data = await response.json();
+                    answerId = data.answer_id;
+                } else{
                     const errorData = await response.json();
-                    alert(`Error: ${errorData.message}`);
+                    alert(`Error: ${errorData.detail}`);
                 }
-            } catch (error) {
+            } catch(error){
                 console.error('Error:', error);
                 alert('An error occurred. Please try again.');
-            }
-        });
-    }
+            };
 
-
-
-
-
-    // Helper function to get a cookie by name
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
+            const answer_option_payload = {};
+            try{
+                const response = await fetch(`/answer/answer_option/create/${answerId}/${questionOptionId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(answer_option_payload)
+                });
+                if (response.ok) {
+                } else{
+                    const errorData = await response.json();
+                    alert(`Error: ${errorData.detail}`);
                 }
-            }
-        }
-        return cookieValue;
-    };
-
-    function logout() {
-        // Get all cookies
-        const cookies = document.cookie.split(";");
-    
-        // Iterate through all cookies and delete each one
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i];
-            const eqPos = cookie.indexOf("=");
-            const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
-            // Set the cookie's expiry date to a past date to delete it
-            document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
-        }
-    
-        // Redirect to the login page
-        window.location.href = '/auth/login-page';
-    };
+            } catch(error){
+                console.error('Error:', error);
+                alert('An error occurred. Please try again.');
+            };
+        };
+        
+    });
+}

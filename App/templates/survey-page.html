@@ -27,7 +27,7 @@
                         <td>{{ loop.index }}</td>
                         <td>{{ survey.name }}</td>
                         <td>
-                            <button onclick="window.location.href='admin/edit-questions/{{survey.survey_id}}'" type="button" class="btn btn-info">
+                            <button onclick="window.location.href='/admin/question/{{ survey.survey_id }}'" type="button" class="btn btn-info">
                                 Editar questões
                             </button>
                         </td>
