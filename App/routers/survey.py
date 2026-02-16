@@ -1,13 +1,13 @@
 from datetime import datetime
 from typing import Annotated, Optional
 from sqlalchemy.orm import Session
-from fastapi import APIRouter, Depends, HTTPException, Path, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Path, Request, status, Response
 
 from ..database import SessionLocal
 from pydantic import BaseModel, Field
 from ..models import Survey, SurveyStatus, Question, QuestionOption
 
-from starlette.responses import RedirectResponse
+from starlette.responses import RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 
 router = APIRouter(
@@ -44,16 +44,35 @@ class SurveyRequest(BaseModel):
     max_responses: int = Field(min=1)
 
 
+class CityRequest(BaseModel):
+    city: str=Field(min_length=3)
+
+
 ### PAGES ###
 
-@router.get("/city/{survey_id}")
-async def render_restaurant_code_page( request: Request, survey_id: int):
 
+def redirect_to_city_page(survey_id: int):
+    redirect_response = RedirectResponse(url=f"/survey/city/{survey_id}", status_code=status.HTTP_302_FOUND)
+    redirect_response.delete_cookie(key="city")
+    return redirect_response
+
+
+@router.get("/city/{survey_id}")
+async def render_city_code_page(response: Response, request: Request, survey_id: int):
+    
+    response.delete_cookie("city")
+    
     return templates.TemplateResponse("city.html", {"request": request})
 
 @router.get("/fill/{survey_id}")
 async def render_survey_response_page(request: Request,
         db: db_dependency, survey_id: int):
+    
+    city_cookies = request.cookies.get("city")
+    if not city_cookies:
+        return redirect_to_city_page(survey_id)
+    
+    print(city_cookies)
     
     question_model = db.query(Question).filter(Question.survey_id == survey_id).order_by(Question.order).all()
     
@@ -70,6 +89,21 @@ async def render_survey_response_page(request: Request,
 
 ### ENDPOINTS ###
 
+
+@router.post("/create_city_cookies")
+async def create_city_cookies(response: Response, city_request: CityRequest):
+    json_response = JSONResponse({"success": True})
+    json_response.set_cookie(
+        key="city",
+        value=city_request.city,
+        max_age=3600,
+        path="/",
+        httponly=False,
+        samesite="lax"
+    )
+    
+    return json_response
+    
 @router.get("/status", status_code=status.HTTP_200_OK)
 async def get_all_survey_status(db: db_dependency):
     return db.query(SurveyStatus).all()

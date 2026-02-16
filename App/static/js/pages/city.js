@@ -13,9 +13,27 @@ if (cityForm) {
         const surveyId = parseInt(pathParts[3]);
 
         console.log(surveyId, city)
+        const payload = {
+            city: city
+        }
 
-        document.cookie = `city=${encodeURIComponent(city)}; path=/`;
+        try{
+            const response = await fetch("/survey/create_city_cookies", {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            });
+            if (response.ok){
+            }else{
+                const errorData = await response.json();
+                alert(`Error: ${errorData.detail}`);
+            }
+        }catch(error){
+            console.error('Error:', error);
+            alert('An error occurred. Please try again.');
+        };
 
         window.location.href = `/survey/fill/${surveyId}`;
+        return
     });
 };

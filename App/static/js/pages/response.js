@@ -1,21 +1,18 @@
 const pathParts = window.location.pathname.split('/');
 const surveyId = pathParts[3];
-const city = getCookie("city");
 var responseId=-1;
 
 document.addEventListener("DOMContentLoaded", async () => {
     
-    if (!city) {
-        alert('City not found. Please select a city first.');
-        window.location.href = `/survey/city/${surveyId}`;
-        return;
-    }
+    const city = getCookie("city");
 
     const payload = {
         city: city,
         begin_date: new Date().toISOString(),
         end_date: null
     };
+
+    console.log("cidade: ", city)
 
     try{
             const response = await fetch(`/response/create/${surveyId}`, {
