@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Path, Request, status, Re
 
 from ..database import SessionLocal
 from pydantic import BaseModel, Field
-from ..models import Survey, SurveyStatus, Question, QuestionOption
+from ..models import Survey, SurveyStatus, Question, QuestionOption, Response as ResponseModel
 
 from starlette.responses import RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
@@ -53,26 +53,35 @@ class CityRequest(BaseModel):
 
 def redirect_to_city_page(survey_id: int):
     redirect_response = RedirectResponse(url=f"/survey/city/{survey_id}", status_code=status.HTTP_302_FOUND)
-    redirect_response.delete_cookie(key="city")
+    redirect_response.delete_cookie(key="response_id")
     return redirect_response
 
 
 @router.get("/city/{survey_id}")
-async def render_city_code_page(response: Response, request: Request, survey_id: int):
+async def render_city_code_page(request: Request, survey_id: int):
     
-    response.delete_cookie("city")
-    
-    return templates.TemplateResponse("city.html", {"request": request})
+    template_response = templates.TemplateResponse("city.html", {"request": request})
+    return template_response
 
 @router.get("/fill/{survey_id}")
 async def render_survey_response_page(request: Request,
         db: db_dependency, survey_id: int):
     
-    city_cookies = request.cookies.get("city")
-    if not city_cookies:
+    response_id_cookie = request.cookies.get("response_id")
+    if not response_id_cookie:
         return redirect_to_city_page(survey_id)
     
-    print(city_cookies)
+    try:
+        response_id = int(response_id_cookie)
+        response_model = db.query(ResponseModel).filter(
+            ResponseModel.response_id == response_id,
+            ResponseModel.survey_id == survey_id
+        ).first()
+        
+        if not response_model:
+            return redirect_to_city_page(survey_id)
+    except (ValueError, TypeError):
+        return redirect_to_city_page(survey_id)
     
     question_model = db.query(Question).filter(Question.survey_id == survey_id).order_by(Question.order).all()
     
@@ -88,20 +97,6 @@ async def render_survey_response_page(request: Request,
 
 ### ENDPOINTS ###
 
-
-@router.post("/create_city_cookies")
-async def create_city_cookies(response: Response, city_request: CityRequest):
-    json_response = JSONResponse({"success": True})
-    json_response.set_cookie(
-        key="city",
-        value=city_request.city,
-        max_age=3600,
-        path="/",
-        httponly=False,
-        samesite="lax"
-    )
-    
-    return json_response
     
 @router.get("/status", status_code=status.HTTP_200_OK)
 async def get_all_survey_status(db: db_dependency):

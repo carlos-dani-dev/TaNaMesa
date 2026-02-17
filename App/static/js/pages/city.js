@@ -12,18 +12,22 @@ if (cityForm) {
         const pathParts = window.location.pathname.split('/');
         const surveyId = parseInt(pathParts[3]);
 
-        console.log(surveyId, city)
         const payload = {
-            city: city
-        }
+            city: city,
+            begin_date: new Date().toISOString(),
+            end_date: null
+        };
 
         try{
-            const response = await fetch("/survey/create_city_cookies", {
+            const response = await fetch(`/response/create/${surveyId}`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(payload)
             });
+
             if (response.ok){
+                const data = await response.json();
+                console.log('Response created:', data.response_id);
             }else{
                 const errorData = await response.json();
                 alert(`Error: ${errorData.detail}`);

@@ -1,6 +1,10 @@
 const pathParts = window.location.pathname.split('/');
 const surveyId = pathParts[3];
-var responseId=-1;
+const responseIdCookie = getCookie("response_id");
+if (!responseIdCookie) {
+    window.location.href = `/survey/city/${surveyId}`;
+}
+var responseId = parseInt(responseIdCookie);
 
 document.addEventListener("DOMContentLoaded", async () => {
     
@@ -25,33 +29,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
 
     });
-
-    const city = getCookie("city");
-
-    const payload = {
-        city: city,
-        begin_date: new Date().toISOString(),
-        end_date: null
-    };
-
-    try{
-            const response = await fetch(`/response/create/${surveyId}`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(payload)
-            });
-
-            if (response.ok){
-                const data = await response.json();
-                responseId = data.response_id;
-            }else{
-                const errorData = await response.json();
-                alert(`Error: ${errorData.detail}`);
-            }
-        }catch(error){
-            console.error('Error:', error);
-            alert('An error occurred. Please try again.');
-        };
     
     const newResponseForm = document.getElementById("newResponseForm");
     if (newResponseForm) {

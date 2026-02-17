@@ -7,7 +7,7 @@ from ..database import SessionLocal
 from pydantic import BaseModel, Field
 from ..models import Survey, SurveyStatus, Question, Answer, Response
 
-from starlette.responses import RedirectResponse
+from starlette.responses import RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 
 
@@ -72,7 +72,19 @@ async def create_response(db: db_dependency, response_request: ResponseRequest,
     db.commit()
     db.refresh(response_model)
     
-    return {"response_id": response_model.response_id}
+    # Backend cria o cookie de forma segura
+    json_response = JSONResponse({"response_id": response_model.response_id})
+    json_response.set_cookie(
+        key="response_id",
+        value=str(response_model.response_id),
+        max_age=3600,
+        path="/",
+        httponly=False,  # Precisa ser False pois JavaScript lê no response.js
+        samesite="lax",
+        secure=False  # Mudar para True em produção com HTTPS
+    )
+    
+    return json_response
 
 
 @router.delete("/delete/{response_id}", status_code=status.HTTP_204_NO_CONTENT)
